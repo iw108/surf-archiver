@@ -37,7 +37,7 @@ async def run_archiving(
     date_: Union[date, datetime],
     bucket_name: str,
     target_dir: Path,
-):
+) -> dict[str, list[str]]:
     date_str = date_.strftime("%Y%m%d")
 
     async with AsyncExitStack() as stack:
@@ -61,5 +61,6 @@ async def run_archiving(
                     atar(experiment_temp_dir, experiment_target_dir, pool),
                 )
             )
-
         await asyncio.gather(*tar_futures)
+
+    return {k: list(map(lambda file: file.name, files)) for k, files in data.items()}
