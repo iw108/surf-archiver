@@ -2,6 +2,7 @@ import asyncio
 from collections import defaultdict
 from concurrent.futures import Executor, ProcessPoolExecutor
 from contextlib import AsyncExitStack, asynccontextmanager
+from dataclasses import dataclass
 from datetime import date, datetime
 from pathlib import Path
 from tarfile import TarFile
@@ -33,11 +34,25 @@ async def managed_file_system() -> AsyncGenerator[S3FileSystem, None]:
     await session.close()
 
 
+def group_files(files: list[str]) -> dict[str, list[str]]:
+    data: dict[str, list[str]] = defaultdict(list)
+    for file_obj, file in zip(map(Path, files), files):
+        data[file_obj.parent.name].append(file)
+    return data
+
+
+@dataclass
+class Archive:
+
+    path: str
+    src_keys: list[str]
+
+
 async def run_archiving(
     date_: Union[date, datetime],
     bucket_name: str,
     target_dir: Path,
-) -> dict[str, list[str]]:
+) -> list[Archive]:
     date_str = date_.strftime("%Y%m%d")
 
     async with AsyncExitStack() as stack:
@@ -45,22 +60,28 @@ async def run_archiving(
         pool = stack.enter_context(ProcessPoolExecutor())
         s3 = await stack.enter_async_context(managed_file_system())
 
-        files = map(Path, await s3._glob(f"{bucket_name}/*/{date_str}*.tar"))
-        data: dict[str, list[Path]] = defaultdict(list)
-        for file in files:
-            data[file.parent.name].append(file)
-
+        archives = []
         tar_futures = []
-        for experiment_id, files in data.items():
-            experiment_temp_dir = temp_dir / experiment_id
-            await s3._get(files, f"{experiment_temp_dir}/", batch_size=-1)
 
+        grouped_files = group_files(await s3._glob(f"{bucket_name}/*/{date_str}*.tar"))
+        for experiment_id, files in grouped_files.items():
+            experiment_temp_dir = temp_dir / experiment_id
             experiment_target_dir = target_dir / experiment_id / f"{date_str}.tar"
+
+            await s3._get(files, f"{experiment_temp_dir}/", batch_size=-1)
             tar_futures.append(
                 asyncio.create_task(
                     atar(experiment_temp_dir, experiment_target_dir, pool),
                 )
             )
+
+            archives.append(
+                Archive(
+                    path=str(experiment_target_dir.relative_to(target_dir)), 
+                    src_keys=files,
+                )
+            )
+
         await asyncio.gather(*tar_futures)
 
-    return {k: list(map(lambda file: file.name, files)) for k, files in data.items()}
+    return archives

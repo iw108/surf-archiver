@@ -1,5 +1,6 @@
 import asyncio
 import json
+from dataclasses import asdict
 from datetime import datetime
 from pathlib import Path
 from typing import Annotated
@@ -29,4 +30,4 @@ def archive(
     target_dir: TargetDirT = DEFAULT_DIR,
 ):
     data = asyncio.run(run_archiving(date, bucket_name, target_dir))
-    typer.echo(json.dumps(data, indent=4))
+    typer.echo(json.dumps(list(map(asdict, data)), indent=4))
