@@ -2,6 +2,7 @@ import asyncio
 from datetime import datetime
 from pathlib import Path
 from typing import Annotated
+from uuid import UUID, uuid4
 
 import typer
 
@@ -27,9 +28,15 @@ def now():
 @app.command()
 def archive(
     date: datetime,
+    job_id: Annotated[UUID, typer.Argument(default_factory=uuid4)],
     bucket_name: BucketNameT = DEFAULT_BUCKET_NAME,
     target_dir: TargetDirT = DEFAULT_DIR,
     connection_url: ConnectionURL = DEFAULT_CONNECTION_URL,
 ):
-    config = Config(bucket_name=bucket_name, connection_url=connection_url)
-    asyncio.run(amain(date, target_dir, config))
+    config = Config(
+        bucket_name=bucket_name, 
+        connection_url=connection_url,
+        target_dir=target_dir,
+    )
+
+    asyncio.run(amain(date, job_id, config))

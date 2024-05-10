@@ -5,21 +5,26 @@ from typing import Optional
 
 from aio_pika import DeliveryMode, ExchangeType, Message, connect
 from aio_pika.abc import AbstractConnection, AbstractExchange
+from pydantic import BaseModel
 
 
-@dataclass(kw_only=True)
+class BaseMessage(BaseModel):
+    pass
+
+
+@dataclass
 class ExchangeConfig:
     """Exchange config for RabbitMQ"""
 
     name: str = "surf-data-archive"
     type: ExchangeType = ExchangeType.FANOUT
-    routing_key: str = "archiving-complete"
+    routing_key: str = "archiving-cron"
 
 
 class AbstractPublisher(ABC):
 
     @abstractmethod
-    async def publish(self, message: dict): ...
+    async def publish(self, message: Message): ...
 
 
 class AbstractManagedPublisher(ABC):
@@ -43,13 +48,14 @@ class Publisher(AbstractPublisher):
         self.exchange_config = exchange_config
         self.delivery_mode = delivery_mode
 
-    async def publish(self, message: dict):
+    async def publish(self, message: BaseMessage):
         message = Message(
-            json.dumps(message).encode(),
+            message.model_dump_json(indent=4).encode(),
             delivery_mode=self.delivery_mode,
         )
         await self.exchange.publish(
-            message, routing_key=self.exchange_config.routing_key
+            message, 
+            routing_key=self.exchange_config.routing_key,
         )
 
 
@@ -60,7 +66,7 @@ class ManagedPublisher(AbstractManagedPublisher):
     def __init__(
         self,
         connection_url: str,
-        exchange_config: Optional[ExchangeConfig],
+        exchange_config: Optional[ExchangeConfig] = None,
     ):
         self.connection_url = connection_url
         self.exchange_config = exchange_config or ExchangeConfig()

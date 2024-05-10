@@ -61,7 +61,7 @@ class Archiver(AbstractArchiver):
         date_: Date,
         temp_dir: Path,
         target_dir: Path,
-    ) -> AsyncGenerator[tuple[Archive, asyncio.Task]]:
+    ) -> AsyncGenerator[tuple[Archive, asyncio.Task], None]:
         grouped_files = await self.file_system.list_files_by_date(date_)
         for experiment_id, files in grouped_files.items():
             experiment_temp_dir = temp_dir / experiment_id
@@ -90,15 +90,15 @@ class ManagedArchiver:
 
     async def __aenter__(self) -> Archiver:
 
-        stack = await AsyncExitStack().__aenter__()
+        self.stack = await AsyncExitStack().__aenter__()
 
-        s3 = await stack.enter_async_context(managed_file_system())
-        pool = await stack.enter_context(ProcessPoolExecutor())
+        s3 = await self.stack.enter_async_context(managed_file_system())
+        pool = self.stack.enter_context(ProcessPoolExecutor())
 
         return Archiver(
             file_system=ExperimentFileSystem(s3, self.bucket_name),
             pool=pool,
         )
 
-    async def __aexit__(self):
+    async def __aexit__(self, *args):
         await self.stack.aclose()
