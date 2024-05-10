@@ -3,7 +3,6 @@ from abc import ABC, abstractmethod
 from concurrent.futures import ProcessPoolExecutor
 from contextlib import AsyncExitStack
 from dataclasses import dataclass
-from datetime import date
 from pathlib import Path
 from typing import AsyncGenerator
 
@@ -21,7 +20,7 @@ class Archive:
 class AbstractArchiver(ABC):
 
     @abstractmethod
-    def archive(self, date_: date, target_dir: Path) -> list[Archive]: ...
+    async def archive(self, date_: Date, target_dir: Path) -> list[Archive]: ...
 
 
 class AbstractManagedArchiver(ABC):

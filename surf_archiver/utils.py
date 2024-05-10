@@ -13,7 +13,7 @@ class Date:
 
     def __str__(self) -> str:
         return self.date.strftime("%Y%m%d")
-    
+
     def isoformat(self) -> str:
         return self.date.isoformat()
 

@@ -7,6 +7,7 @@ from uuid import UUID, uuid4
 import typer
 
 from .main import Config, amain
+from .utils import Date
 
 DEFAULT_BUCKET_NAME = "prince-data-dev"
 DEFAULT_DIR = Path.home() / "prince"
@@ -14,7 +15,7 @@ DEFAULT_CONNECTION_URL = "amqp://guest:guest@localhost"
 
 BucketNameT = Annotated[str, typer.Option(envvar="SURF_ARCHIVER_BUCKET")]
 TargetDirT = Annotated[Path, typer.Option(envvar="SURF_ARCHIVER_TARGET_DIR")]
-ConnectionURL = Annotated[Path, typer.Option(envvar="SURF_ARCHIVER_CONNECTION_URL")]
+ConnectionURL = Annotated[str, typer.Option(envvar="SURF_ARCHIVER_CONNECTION_URL")]
 
 
 app = typer.Typer()
@@ -34,9 +35,9 @@ def archive(
     connection_url: ConnectionURL = DEFAULT_CONNECTION_URL,
 ):
     config = Config(
-        bucket_name=bucket_name, 
+        bucket_name=bucket_name,
         connection_url=connection_url,
         target_dir=target_dir,
     )
 
-    asyncio.run(amain(date, job_id, config))
+    asyncio.run(amain(Date(date), job_id, config))

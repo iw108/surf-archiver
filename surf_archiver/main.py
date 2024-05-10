@@ -1,11 +1,11 @@
 from dataclasses import dataclass
+from datetime import date, datetime
 from pathlib import Path
-from uuid import UUID
-from datetime import datetime, date
 from typing import Union
+from uuid import UUID
 
-from .archiver import ManagedArchiver, Archive
-from .publisher import ManagedPublisher, BaseMessage
+from .archiver import Archive, ManagedArchiver
+from .publisher import BaseMessage, ManagedPublisher
 from .utils import Date
 
 
@@ -23,11 +23,7 @@ class Payload(BaseMessage):
     archives: list[Archive]
 
 
-async def amain(
-    date_: Date,
-    job_id: UUID, 
-    config: Config
-):
+async def amain(date_: Date, job_id: UUID, config: Config):
     async with ManagedArchiver(config.bucket_name) as archiver:
         archives = await archiver.archive(date_, config.target_dir)
         payload = Payload(

@@ -1,4 +1,3 @@
-import json
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from typing import Optional
@@ -24,7 +23,7 @@ class ExchangeConfig:
 class AbstractPublisher(ABC):
 
     @abstractmethod
-    async def publish(self, message: Message): ...
+    async def publish(self, message: BaseMessage): ...
 
 
 class AbstractManagedPublisher(ABC):
@@ -49,12 +48,12 @@ class Publisher(AbstractPublisher):
         self.delivery_mode = delivery_mode
 
     async def publish(self, message: BaseMessage):
-        message = Message(
+        _message = Message(
             message.model_dump_json(indent=4).encode(),
             delivery_mode=self.delivery_mode,
         )
         await self.exchange.publish(
-            message, 
+            _message,
             routing_key=self.exchange_config.routing_key,
         )
 
