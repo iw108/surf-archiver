@@ -1,4 +1,5 @@
 import asyncio
+import logging
 from abc import ABC, abstractmethod
 from concurrent.futures import ProcessPoolExecutor
 from contextlib import AsyncExitStack
@@ -8,6 +9,8 @@ from typing import AsyncGenerator
 
 from .file import ExperimentFileSystem, get_temp_dir, managed_file_system
 from .utils import Date, atar
+
+LOGGER = logging.getLogger(__name__)
 
 
 @dataclass
@@ -43,6 +46,8 @@ class Archiver(AbstractArchiver):
         self.pool = pool
 
     async def archive(self, date_: Date, target_dir: Path) -> list[Archive]:
+        LOGGER.info("Starting archiving for %s", date_.isoformat())
+
         archives: list[Archive] = []
         tar_futures: list[asyncio.Task] = []
 
@@ -53,6 +58,8 @@ class Archiver(AbstractArchiver):
 
             await asyncio.gather(*tar_futures)
 
+        LOGGER.info("Archiving complete")
+
         return archives
 
     async def _task_iterator(
@@ -62,7 +69,12 @@ class Archiver(AbstractArchiver):
         target_dir: Path,
     ) -> AsyncGenerator[tuple[Archive, asyncio.Task], None]:
         grouped_files = await self.file_system.list_files_by_date(date_)
-        for experiment_id, files in grouped_files.items():
+
+        experiment_count = len(grouped_files)
+        LOGGER.info("Archiving %i experiments", len(grouped_files))
+        for index, (experiment_id, files) in enumerate(grouped_files.items(), start=1):
+            LOGGER.info("Archiving %s (%i/%i)", experiment_id, index, experiment_count)
+
             experiment_temp_dir = temp_dir / experiment_id
             experiment_target_dir = target_dir / experiment_id / f"{date_}.tar"
 

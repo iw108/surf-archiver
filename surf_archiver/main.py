@@ -1,3 +1,4 @@
+import logging
 from dataclasses import dataclass
 from datetime import date, datetime
 from pathlib import Path
@@ -7,6 +8,8 @@ from uuid import UUID
 from .archiver import Archive, ManagedArchiver
 from .publisher import BaseMessage, ManagedPublisher
 from .utils import Date
+
+LOGGER = logging.getLogger(__name__)
 
 
 @dataclass
