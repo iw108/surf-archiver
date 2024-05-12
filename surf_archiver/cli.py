@@ -6,14 +6,10 @@ from uuid import UUID, uuid4
 
 import typer
 
-from .config import get_config
+from .config import DEFAULT_CONFIG_PATH, get_config
 from .log import configure_logging
 from .main import amain
 from .utils import Date
-
-
-DEFAULT_CONFIG_PATH = Path.home() / ".surf-archiver" / "config.yaml"
-
 
 app = typer.Typer()
 
@@ -33,5 +29,5 @@ def archive(
 
     if config.log_file:
         configure_logging(job_id, file=config.log_file)
-    
+
     asyncio.run(amain(Date(date), job_id, config))

@@ -8,6 +8,8 @@ from pydantic_settings import (
     YamlConfigSettingsSource,
 )
 
+DEFAULT_CONFIG_PATH = Path.home() / ".surf-archiver" / "config.yaml"
+
 
 class Config(BaseSettings):
 
