@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Tuple, Type
+from typing import Optional, Tuple, Type
 
 from pydantic_settings import (
     BaseSettings,
@@ -14,6 +14,7 @@ class Config(BaseSettings):
     target_dir: Path = Path.home() / "prince"
     connection_url: str = "amqp://guest:guest@localhost"
     bucket: str = "prince-archiver-dev"
+    log_file: Optional[Path] = Path.home() / ".surf-archiver" / "app.log"
 
     model_config = SettingsConfigDict(env_prefix="SURF_ARCHIVER")
 

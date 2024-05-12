@@ -27,12 +27,11 @@ def now():
 def archive(
     date: datetime,
     job_id: Annotated[UUID, typer.Argument(default_factory=uuid4)],
-    log_to_file: bool = True,
     config_path: Path = DEFAULT_CONFIG_PATH,
 ):
-    if log_to_file:
-        configure_logging(job_id)
-
     config = get_config(config_path)
 
+    if config.log_file:
+        configure_logging(job_id, file=config.log_file)
+    
     asyncio.run(amain(Date(date), job_id, config))

@@ -3,12 +3,10 @@ import logging.config
 from pathlib import Path
 from uuid import UUID
 
-LOG_FILE = Path.home() / ".surf-archiver" / "app.log"
 
+def configure_logging(job_id: UUID, file: Path):
 
-def configure_logging(job_id: UUID, file: Path = LOG_FILE):
-
-    LOG_FILE.parent.mkdir(exist_ok=True, parents=True)
+    file.parent.mkdir(exist_ok=True, parents=True)
 
     log_format = f"[{job_id}] %(asctime)s - %(levelname)s - %(name)s - %(message)s"
 
