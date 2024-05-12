@@ -1,22 +1,14 @@
 import logging
-from dataclasses import dataclass
 from datetime import date, datetime
-from pathlib import Path
 from typing import Union
 from uuid import UUID
 
 from .archiver import Archive, ManagedArchiver
+from .config import Config
 from .publisher import BaseMessage, ManagedPublisher
 from .utils import Date
 
 LOGGER = logging.getLogger(__name__)
-
-
-@dataclass
-class Config:
-    target_dir: Path
-    connection_url: str
-    bucket_name: str
 
 
 class Payload(BaseMessage):
@@ -27,7 +19,7 @@ class Payload(BaseMessage):
 
 
 async def amain(date_: Date, job_id: UUID, config: Config):
-    async with ManagedArchiver(config.bucket_name) as archiver:
+    async with ManagedArchiver(config.bucket) as archiver:
         archives = await archiver.archive(date_, config.target_dir)
         payload = Payload(
             job_id=job_id,
