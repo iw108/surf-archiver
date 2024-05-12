@@ -6,7 +6,7 @@ from uuid import UUID
 LOG_FILE = Path.home() / ".surf-archiver" / "app.log"
 
 
-def configure_logging(job_id: UUID):
+def configure_logging(job_id: UUID, file: Path = LOG_FILE):
 
     LOG_FILE.parent.mkdir(exist_ok=True, parents=True)
 
@@ -22,11 +22,12 @@ def configure_logging(job_id: UUID):
             },
             "handlers": {
                 "file": {
-                    "class": "logging.FileHandler",
+                    "class": "logging.handlers.RotatingFileHandler",
                     "formatter": "simple",
-                    "filename": str(LOG_FILE),
+                    "filename": str(file),
                     "level": "INFO",
                     "mode": "a",
+                    "backupCount": 3,
                 }
             },
             "loggers": {
