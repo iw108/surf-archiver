@@ -1,21 +1,21 @@
 import asyncio
-import json
-from dataclasses import asdict
 from datetime import datetime
 from pathlib import Path
 from typing import Annotated
+from uuid import UUID, uuid4
+import logging
 
 import typer
 
-from .utils import run_archiving
+from .config import DEFAULT_CONFIG_PATH, get_config
+from .log import configure_logging
+from .main import amain
+from .utils import Date
+
+
+LOGGER = logging.getLogger(__name__)
 
 app = typer.Typer()
-
-DEFAULT_BUCKET_NAME = "prince-data-dev"
-DEFAULT_DIR = Path.home() / "prince"
-
-BucketNameT = Annotated[str, typer.Option(envvar="SURF_ARCHIVER_BUCKET")]
-TargetDirT = Annotated[Path, typer.Option(envvar="SURF_ARCHIVER_TARGET_DIR")]
 
 
 @app.command()
@@ -26,8 +26,15 @@ def now():
 @app.command()
 def archive(
     date: datetime,
-    bucket_name: BucketNameT = DEFAULT_BUCKET_NAME,
-    target_dir: TargetDirT = DEFAULT_DIR,
+    job_id: Annotated[UUID, typer.Argument(default_factory=uuid4)],
+    config_path: Path = DEFAULT_CONFIG_PATH,
 ):
-    data = asyncio.run(run_archiving(date, bucket_name, target_dir))
-    typer.echo(json.dumps(list(map(asdict, data)), indent=4))
+    config = get_config(config_path)
+    if config.log_file:
+        configure_logging(job_id, file=config.log_file)
+    
+    try:
+        asyncio.run(amain(Date(date), job_id, config))
+    except Exception as err:
+        LOGGER.exception(err, stack_info=True)
+        raise typer.Exit(code=1)
