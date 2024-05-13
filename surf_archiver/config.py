@@ -8,17 +8,19 @@ from pydantic_settings import (
     YamlConfigSettingsSource,
 )
 
-DEFAULT_CONFIG_PATH = Path.home() / ".surf-archiver" / "config.yaml"
+HOME_PATH = Path.home()
+
+DEFAULT_CONFIG_PATH = HOME_PATH / ".surf-archiver" / "config.yaml"
 
 
 class Config(BaseSettings):
 
-    target_dir: Path = Path.home() / "prince"
-    connection_url: str = "amqp://guest:guest@localhost"
+    target_dir: Path = HOME_PATH / "prince"
+    connection_url: str = "amqp://guest:guest@localhost:5672"
     bucket: str = "prince-archiver-dev"
-    log_file: Optional[Path] = Path.home() / ".surf-archiver" / "app.log"
+    log_file: Optional[Path] = HOME_PATH / ".surf-archiver" / "app.log"
 
-    model_config = SettingsConfigDict(env_prefix="SURF_ARCHIVER")
+    model_config = SettingsConfigDict(env_prefix="surf_archiver_")
 
 
 def get_config(config_path: Path) -> Config:
