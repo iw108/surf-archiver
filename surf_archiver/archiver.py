@@ -8,7 +8,7 @@ from pathlib import Path
 from typing import AsyncGenerator
 
 from .file import ExperimentFileSystem, get_temp_dir, managed_file_system
-from .utils import Date, atar
+from .utils import Date, tar
 
 LOGGER = logging.getLogger(__name__)
 
@@ -49,14 +49,8 @@ class Archiver(AbstractArchiver):
         LOGGER.info("Starting archiving for %s", date_.isoformat())
 
         archives: list[Archive] = []
-        tar_futures: list[asyncio.Task] = []
-
-        with get_temp_dir() as temp_dir:
-            async for archive, task in self._task_iterator(date_, temp_dir, target_dir):
-                archives.append(archive)
-                tar_futures.append(task)
-
-            await asyncio.gather(*tar_futures)
+        async for archive in self._task_iterator(date_, target_dir):
+            archives.append(archive)
 
         LOGGER.info("Archiving complete")
 
@@ -65,31 +59,33 @@ class Archiver(AbstractArchiver):
     async def _task_iterator(
         self,
         date_: Date,
-        temp_dir: Path,
         target_dir: Path,
-    ) -> AsyncGenerator[tuple[Archive, asyncio.Task], None]:
+    ) -> AsyncGenerator[tuple[Archive], None]:
         grouped_files = await self.file_system.list_files_by_date(date_)
 
         experiment_count = len(grouped_files)
-        LOGGER.info("Archiving %i experiments", len(grouped_files))
+        LOGGER.info("Archiving %i experiments", experiment_count)
+
         for index, (experiment_id, files) in enumerate(grouped_files.items(), start=1):
             LOGGER.info("Archiving %s (%i/%i)", experiment_id, index, experiment_count)
 
-            experiment_temp_dir = temp_dir / experiment_id
             experiment_target_dir = target_dir / experiment_id / f"{date_}.tar"
+            if experiment_target_dir.exists():
+                LOGGER.info("Skipping %s: Already exists", experiment_id)
+                continue
 
-            await self.file_system.get_files(files, experiment_temp_dir)
+            with get_temp_dir() as temp_dir:
+                await self.file_system.get_files(files, temp_dir)
+                await self._tar(temp_dir, experiment_target_dir)
 
-            archive = Archive(
+            yield Archive(
                 path=str(experiment_target_dir.relative_to(target_dir)),
                 src_keys=files,
             )
 
-            task = asyncio.create_task(
-                atar(experiment_temp_dir, experiment_target_dir, self.pool),
-            )
-
-            yield archive, task
+    async def _tar(self, src_dir: Path, target_dir: Path):
+        loop = asyncio.get_event_loop()
+        await loop.run_in_executor(self.pool, tar, src_dir, target_dir)
 
 
 class ManagedArchiver:
