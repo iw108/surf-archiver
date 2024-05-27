@@ -60,7 +60,7 @@ class Archiver(AbstractArchiver):
         self,
         date_: Date,
         target_dir: Path,
-    ) -> AsyncGenerator[tuple[Archive], None]:
+    ) -> AsyncGenerator[Archive, None]:
         grouped_files = await self.file_system.list_files_by_date(date_)
 
         experiment_count = len(grouped_files)
