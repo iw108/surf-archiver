@@ -1,9 +1,9 @@
 import asyncio
+import logging
 from datetime import datetime
 from pathlib import Path
 from typing import Annotated
 from uuid import UUID, uuid4
-import logging
 
 import typer
 
@@ -11,7 +11,6 @@ from .config import DEFAULT_CONFIG_PATH, get_config
 from .log import configure_logging
 from .main import amain
 from .utils import Date
-
 
 LOGGER = logging.getLogger(__name__)
 
@@ -32,7 +31,7 @@ def archive(
     config = get_config(config_path)
     if config.log_file:
         configure_logging(job_id, file=config.log_file)
-    
+
     try:
         asyncio.run(amain(Date(date), job_id, config))
     except Exception as err:
