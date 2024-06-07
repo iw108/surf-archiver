@@ -38,17 +38,20 @@ def archive(
         bucket_name=config.bucket,
         base_path=config.target_dir,
     )
-    publisher_config = PublisherConfig(connection_url=config.connection_url)
-
-    run = run_archiving(
-        Date(date),
-        job_id,
-        ManagedArchiver(archiver_config),
-        ManagedPublisher(publisher_config),
+    publisher_config = PublisherConfig(
+        exchange_name=config.exchange_name,
+        connection_url=config.connection_url,
     )
 
     try:
-        asyncio.run(run)
+        asyncio.run(
+            run_archiving(
+                Date(date),
+                job_id,
+                ManagedArchiver(archiver_config),
+                ManagedPublisher(publisher_config),
+            )
+        )
     except Exception as err:
         LOGGER.exception(err, stack_info=True)
         raise typer.Exit(code=1)

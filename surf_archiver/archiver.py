@@ -79,7 +79,7 @@ class Archiver(AbstractArchiver):
                 continue
 
             with self.archive_file_system.get_temp_dir() as temp_dir:
-                await self.experiment_file_system.get_files(files, temp_dir)
+                await self.experiment_file_system.get_files(files, temp_dir.path)
                 await loop.run_in_executor(
                     self.pool, self.archive_file_system.add, temp_dir, path
                 )

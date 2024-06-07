@@ -47,8 +47,14 @@ class ExperimentFileSystem:
         return data
 
 
-class _TempDir(Path):
-    pass
+class _TempDir:
+
+    def __init__(self, path: Path):
+        self._path = path
+
+    @property
+    def path(self) -> Path:
+        return self._path
 
 
 class ArchiveFileSystem:
@@ -63,10 +69,10 @@ class ArchiveFileSystem:
         target = self.base_path / target
         target.parent.mkdir(parents=True, exist_ok=True)
         with TarFile.open(target, "w") as tar:
-            tar.add(temp_dir, arcname=".")
+            tar.add(temp_dir.path, arcname=".")
 
-    @contextmanager
     @staticmethod
+    @contextmanager
     def get_temp_dir() -> Generator[_TempDir, None, None]:
         with TemporaryDirectory() as _temp_path:
-            yield _TempDir(_temp_path)
+            yield _TempDir(Path(_temp_path))
