@@ -1,6 +1,7 @@
 from collections import defaultdict
 from contextlib import asynccontextmanager, contextmanager
 from pathlib import Path
+from tarfile import TarFile
 from tempfile import TemporaryDirectory
 from typing import AsyncGenerator, Generator
 
@@ -9,14 +10,8 @@ from s3fs import S3FileSystem
 from .utils import Date
 
 
-@contextmanager
-def get_temp_dir() -> Generator[Path, None, None]:
-    with TemporaryDirectory() as _temp_path:
-        yield Path(_temp_path)
-
-
 @asynccontextmanager
-async def managed_file_system() -> AsyncGenerator[S3FileSystem, None]:
+async def managed_s3_file_system() -> AsyncGenerator[S3FileSystem, None]:
     s3 = S3FileSystem(asynchronous=True)
 
     session = await s3.set_session()
@@ -50,3 +45,28 @@ class ExperimentFileSystem:
         for file_obj, file in zip(map(Path, files), files):
             data[file_obj.parent.name].append(file)
         return data
+
+
+class _TempDir(Path):
+    pass
+
+
+class ArchiveFileSystem:
+
+    def __init__(self, base_path: Path):
+        self.base_path = base_path
+
+    def exists(self, path: Path) -> bool:
+        return (self.base_path / path).exists()
+
+    def add(self, temp_dir: _TempDir, target: Path):
+        target = self.base_path / target
+        target.parent.mkdir(parents=True, exist_ok=True)
+        with TarFile.open(target, "w") as tar:
+            tar.add(temp_dir, arcname=".")
+
+    @contextmanager
+    @staticmethod
+    def get_temp_dir() -> Generator[_TempDir, None, None]:
+        with TemporaryDirectory() as _temp_path:
+            yield _TempDir(_temp_path)

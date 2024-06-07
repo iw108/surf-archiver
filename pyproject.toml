@@ -13,6 +13,17 @@ s3fs = "^2024.3.1"
 typer = "^0.12.3"
 pydantic-settings = {extras = ["yaml"], version = "^2.2.1"}
 
+
+[tool.poetry.group.dev.dependencies]
+black = "^24.4.0"
+flake8 = "^7.0.0"
+flake8-bugbear = "^24.2.6"
+isort = "^5.13.2"
+mypy = "^1.9.0"
+pytest = "^8.2.2"
+pytest-asyncio = "^0.23.7"
+
+
 [tool.poetry.scripts]
 surf-archiver = 'surf_archiver.cli:app'
 
@@ -28,12 +39,12 @@ module = [
 ignore_missing_imports = true
 
 
-[tool.poetry.group.dev.dependencies]
-black = "^24.4.0"
-flake8 = "^7.0.0"
-flake8-bugbear = "^24.2.6"
-isort = "^5.13.2"
-mypy = "^1.9.0"
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+markers = [
+    "integration"
+]
+
 
 [build-system]
 requires = ["poetry-core"]
