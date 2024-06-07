@@ -88,12 +88,12 @@ class Archiver(AbstractArchiver):
 
 
 @dataclass
-class Config(AbstractConfig):
+class ArchiverConfig(AbstractConfig):
     bucket_name: str
     base_path: Path
 
 
-class ManagedArchiver(AbstractManagedArchiver[Config]):
+class ManagedArchiver(AbstractManagedArchiver[ArchiverConfig]):
 
     stack: AsyncExitStack
 

@@ -7,13 +7,11 @@ from uuid import UUID, uuid4
 
 import typer
 
-from .archiver import Config as ArchiverConfig
-from .archiver import ManagedArchiver
+from .archiver import ArchiverConfig, ManagedArchiver
 from .config import DEFAULT_CONFIG_PATH, get_config
 from .log import configure_logging
 from .main import run_archiving
-from .publisher import Config as PublisherConfig
-from .publisher import ManagedPublisher
+from .publisher import ManagedPublisher, PublisherConfig
 from .utils import Date
 
 LOGGER = logging.getLogger(__name__)

@@ -52,7 +52,7 @@ class _Publisher(AbstractPublisher):
 
 
 @dataclass
-class Config(AbstractConfig):
+class PublisherConfig(AbstractConfig):
     connection_url: str
 
     exchange_name: str = "surf-data-archive"
@@ -60,7 +60,7 @@ class Config(AbstractConfig):
     routing_key: str = "archiving-cron"
 
 
-class ManagedPublisher(AbstractManagedPublisher[Config]):
+class ManagedPublisher(AbstractManagedPublisher[PublisherConfig]):
 
     conn: AbstractConnection
 
