@@ -1,3 +1,4 @@
+import asyncio
 from collections import defaultdict
 from contextlib import asynccontextmanager, contextmanager
 from pathlib import Path
@@ -61,11 +62,16 @@ class ArchiveFileSystem:
 
     def __init__(self, base_path: Path):
         self.base_path = base_path
+        self.pool = None
 
     def exists(self, path: Path) -> bool:
         return (self.base_path / path).exists()
 
-    def add(self, temp_dir: _TempDir, target: Path):
+    async def add(self, temp_dir: _TempDir, target: Path):
+        loop = asyncio.get_event_loop()
+        await loop.run_in_executor(self.pool, self._add, temp_dir, target)
+
+    def _add(self, temp_dir: _TempDir, target: Path):
         target = self.base_path / target
         target.parent.mkdir(parents=True, exist_ok=True)
         with TarFile.open(target, "w") as tar:

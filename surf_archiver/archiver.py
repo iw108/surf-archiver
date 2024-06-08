@@ -1,4 +1,3 @@
-import asyncio
 import logging
 from abc import ABC, abstractmethod
 from contextlib import AsyncExitStack
@@ -47,8 +46,6 @@ class Archiver(AbstractArchiver):
         self.experiment_file_system = experiment_file_system
         self.archive_file_system = archive_file_system
 
-        self.pool = None
-
     async def archive(self, date_: Date) -> list[ArchiveEntry]:
         LOGGER.info("Starting archiving for %s", date_.isoformat())
 
@@ -69,7 +66,6 @@ class Archiver(AbstractArchiver):
         experiment_count = len(grouped_files)
         LOGGER.info("Archiving %i experiments", experiment_count)
 
-        loop = asyncio.get_event_loop()
         for index, (experiment_id, files) in enumerate(grouped_files.items(), start=1):
             LOGGER.info("Archiving %s (%i/%i)", experiment_id, index, experiment_count)
 
@@ -80,9 +76,7 @@ class Archiver(AbstractArchiver):
 
             with self.archive_file_system.get_temp_dir() as temp_dir:
                 await self.experiment_file_system.get_files(files, temp_dir.path)
-                await loop.run_in_executor(
-                    self.pool, self.archive_file_system.add, temp_dir, path
-                )
+                await self.archive_file_system.add(temp_dir, path)
 
             yield ArchiveEntry(path=str(path), src_keys=files)
 
