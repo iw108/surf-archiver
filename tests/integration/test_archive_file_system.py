@@ -7,8 +7,6 @@ import pytest
 
 from surf_archiver.file import ArchiveFileSystem, _TempDir
 
-pytest.mark.integtration
-
 
 FactoryT = Callable[[], Path]
 

@@ -30,8 +30,13 @@ class SubscriberConfig:
 
 class Subscriber:
 
-    def __init__(self, config: SubscriberConfig):
+    def __init__(
+        self,
+        config: SubscriberConfig,
+        consume_event: Optional[threading.Event] = None,
+    ):
         self.config = config
+
         parameters = URLParameters(self.config.connection_url)
 
         self.connection = BlockingConnection(parameters)
@@ -42,6 +47,8 @@ class Subscriber:
             exchange_type=self.config.exchange_type,
         )
 
+        self.consume_event = consume_event or threading.Event()
+
     def consume(self, message_waiter: MessageWaiter, timeout: int = 3):
         result = self.channel.queue_declare(queue="", exclusive=True)
         queue_name = result.method.queue
@@ -50,8 +57,12 @@ class Subscriber:
         self.channel.basic_qos(prefetch_count=1)
 
         consumer = self.channel.consume(
-            queue_name, auto_ack=True, inactivity_timeout=timeout
+            queue_name,
+            auto_ack=True,
+            inactivity_timeout=timeout,
         )
+
+        self.consume_event.set()
 
         for _, _, body in consumer:
             message_waiter.set_message(body)

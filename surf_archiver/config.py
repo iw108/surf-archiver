@@ -40,8 +40,8 @@ def get_config(config_path: Path) -> Config:
         ) -> Tuple[PydanticBaseSettingsSource, ...]:
             return (
                 init_settings,
-                env_settings,
                 YamlConfigSettingsSource(settings_cls, yaml_file=config_path),
+                env_settings,
             )
 
     return _Config()

@@ -1,8 +1,5 @@
-import threading
 from io import BytesIO
 from pathlib import Path
-from typing import Generator
-from uuid import uuid4
 
 import pytest
 from httpx import Client
@@ -10,33 +7,7 @@ from typer.testing import CliRunner
 
 from surf_archiver.cli import app
 from surf_archiver.config import Config
-from surf_archiver.test_utils import MessageWaiter, Subscriber, SubscriberConfig
-
-
-@pytest.fixture()
-def random_str() -> str:
-    return uuid4().hex
-
-
-@pytest.fixture()
-def message_waiter(random_str: str) -> Generator[MessageWaiter, None, None]:
-
-    def _target(message_waiter: MessageWaiter):
-        config = SubscriberConfig(
-            connection_url="amqp://guest:guest@localhost:5671",
-            exchange=random_str,
-        )
-        Subscriber(config).consume(message_waiter, timeout=5)
-
-    message_waiter = MessageWaiter()
-
-    thread = threading.Thread(target=_target, args=(message_waiter,))
-
-    thread.start()
-
-    yield message_waiter
-
-    thread.join()
+from surf_archiver.test_utils import MessageWaiter
 
 
 @pytest.fixture()
@@ -55,10 +26,10 @@ def object_store_data(random_str: str):
 
 
 @pytest.fixture()
-def config(random_str: str, tmp_path: Path) -> Config:
+def config(connection_url: str, random_str: str, tmp_path: Path) -> Config:
     return Config(
         target_dir=tmp_path,
-        connection_url="amqp://guest:guest@localhost:5671",
+        connection_url=connection_url,
         bucket=random_str,
         exchange_name=random_str,
         log_file=tmp_path / "test.log",
