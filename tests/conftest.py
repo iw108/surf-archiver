@@ -39,7 +39,7 @@ def fixture_message_waiter(
     thread = threading.Thread(target=_target, args=(message_waiter, consume_event))
     thread.start()
 
-    consume_event.wait()
+    consume_event.wait(timeout=2.0)
 
     yield message_waiter
 
