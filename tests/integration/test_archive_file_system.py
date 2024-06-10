@@ -7,7 +7,6 @@ import pytest
 
 from surf_archiver.file import ArchiveFileSystem, _TempDir
 
-
 FactoryT = Callable[[], Path]
 
 

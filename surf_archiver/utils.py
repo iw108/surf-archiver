@@ -1,10 +1,12 @@
 from datetime import date, datetime
 from typing import Union
 
+DateT = Union[date, datetime]
+
 
 class Date:
 
-    def __init__(self, date_: Union[date, datetime]):
+    def __init__(self, date_: DateT):
         self.date = date_
 
     def __str__(self) -> str:

@@ -41,9 +41,9 @@ async def test_publisher(
         """\
         {
             "test_field": "test"
-        }\
+        }
         """
     )
 
     message_waiter.wait()
-    message_waiter.message == expected_message.encode()
+    assert message_waiter.message == expected_message.strip()

@@ -65,5 +65,6 @@ class Subscriber:
         self.consume_event.set()
 
         for _, _, body in consumer:
-            message_waiter.set_message(body)
+            if isinstance(body, bytes):
+                message_waiter.set_message(body.decode())
             self.channel.cancel()

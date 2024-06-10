@@ -66,10 +66,11 @@ class Archiver(AbstractArchiver):
         experiment_count = len(grouped_files)
         LOGGER.info("Archiving %i experiments", experiment_count)
 
+        tar_name = date_.date.strftime("%Y-%m-%d.tar")
         for index, (experiment_id, files) in enumerate(grouped_files.items(), start=1):
             LOGGER.info("Archiving %s (%i/%i)", experiment_id, index, experiment_count)
 
-            path = Path(experiment_id, f"{date_}.tar")
+            path = Path(experiment_id, tar_name)
             if self.archive_file_system.exists(path):
                 LOGGER.info("Skipping %s: Already exists", experiment_id)
                 continue

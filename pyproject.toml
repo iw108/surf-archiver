@@ -36,7 +36,7 @@ profile = "black"
 
 [[tool.mypy.overrides]]
 module = [
-    "pika",
+    "pika.*",
     "s3fs"
 ]
 ignore_missing_imports = true

@@ -34,7 +34,9 @@ class ExperimentFileSystem:
         self.batch_size = -1
 
     async def list_files_by_date(self, date_: Date) -> dict[str, list[str]]:
-        files = await self.s3._glob(f"{self.bucket_name}/*/{date_}*.tar")
+        date_prefix = date_.date.strftime("%Y%m%d")
+
+        files = await self.s3._glob(f"{self.bucket_name}/*/{date_prefix}*.tar")
         return self._group_files(files)
 
     async def get_files(self, files: list[str], target_dir: Path):
