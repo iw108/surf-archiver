@@ -14,13 +14,11 @@ class BaseMessage(BaseModel):
 
 
 class AbstractPublisher(ABC):
-
     @abstractmethod
     async def publish(self, message: BaseMessage): ...
 
 
 class AbstractManagedPublisher(Generic[ConfigT], ABC):
-
     def __init__(self, config: ConfigT):
         self.config = config
 
@@ -32,7 +30,6 @@ class AbstractManagedPublisher(Generic[ConfigT], ABC):
 
 
 class _Publisher(AbstractPublisher):
-
     def __init__(
         self,
         exchange: AbstractExchange,
@@ -61,7 +58,6 @@ class PublisherConfig(AbstractConfig):
 
 
 class ManagedPublisher(AbstractManagedPublisher[PublisherConfig]):
-
     conn: AbstractConnection
 
     async def __aenter__(self) -> _Publisher:

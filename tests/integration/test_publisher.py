@@ -17,7 +17,6 @@ async def fixture_publisher(
     connection_url: str,
     random_str: str,
 ) -> AsyncGenerator[_Publisher, None]:
-
     config = PublisherConfig(
         connection_url=connection_url,
         exchange_name=random_str,
@@ -31,7 +30,6 @@ async def test_publisher(
     publisher: _Publisher,
     message_waiter: MessageWaiter,
 ):
-
     class Message(BaseMessage):
         test_field: str = "test"
 

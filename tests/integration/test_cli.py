@@ -38,7 +38,6 @@ def config(connection_url: str, random_str: str, tmp_path: Path) -> Config:
 
 @pytest.fixture()
 def config_file(config: Config, tmp_path: Path) -> Path:
-
     config_dir = tmp_path / "config"
     config_dir.mkdir()
 

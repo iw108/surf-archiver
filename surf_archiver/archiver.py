@@ -19,13 +19,11 @@ class ArchiveEntry:
 
 
 class AbstractArchiver(ABC):
-
     @abstractmethod
     async def archive(self, date: DateT) -> list[ArchiveEntry]: ...
 
 
 class AbstractManagedArchiver(Generic[ConfigT], ABC):
-
     def __init__(self, config: ConfigT):
         self.config = config
 
@@ -37,7 +35,6 @@ class AbstractManagedArchiver(Generic[ConfigT], ABC):
 
 
 class Archiver(AbstractArchiver):
-
     def __init__(
         self,
         experiment_file_system: ExperimentFileSystem,
@@ -61,7 +58,6 @@ class Archiver(AbstractArchiver):
         self,
         date: DateT,
     ) -> AsyncGenerator[ArchiveEntry, None]:
-
         grouped_files = await self.experiment_file_system.list_files_by_date(date)
         experiment_count = len(grouped_files)
         LOGGER.info("Archiving %i experiments", experiment_count)
@@ -89,11 +85,9 @@ class ArchiverConfig(AbstractConfig):
 
 
 class ManagedArchiver(AbstractManagedArchiver[ArchiverConfig]):
-
     stack: AsyncExitStack
 
     async def __aenter__(self) -> Archiver:
-
         self.stack = await AsyncExitStack().__aenter__()
         s3 = await self.stack.enter_async_context(managed_s3_file_system())
 

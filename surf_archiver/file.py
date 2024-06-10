@@ -23,7 +23,6 @@ async def managed_s3_file_system() -> AsyncGenerator[S3FileSystem, None]:
 
 
 class ExperimentFileSystem:
-
     def __init__(
         self,
         s3: S3FileSystem,
@@ -51,7 +50,6 @@ class ExperimentFileSystem:
 
 
 class _TempDir:
-
     def __init__(self, path: Path):
         self._path = path
 
@@ -61,7 +59,6 @@ class _TempDir:
 
 
 class ArchiveFileSystem:
-
     def __init__(self, base_path: Path):
         self.base_path = base_path
         self.pool = None

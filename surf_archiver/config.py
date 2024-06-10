@@ -14,7 +14,6 @@ DEFAULT_CONFIG_PATH = HOME_PATH / ".surf-archiver" / "config.yaml"
 
 
 class Config(BaseSettings):
-
     bucket: str = "prince-archiver-dev"
     target_dir: Path = HOME_PATH / "prince"
 
@@ -28,7 +27,6 @@ class Config(BaseSettings):
 
 def get_config(config_path: Path) -> Config:
     class _Config(Config):
-
         @classmethod
         def settings_customise_sources(
             cls,

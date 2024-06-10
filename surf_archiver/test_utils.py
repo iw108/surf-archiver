@@ -7,7 +7,6 @@ from pika.exchange_type import ExchangeType
 
 
 class MessageWaiter:
-
     def __init__(self, *, _event: Optional[threading.Event] = None):
         self.event = _event or threading.Event()
         self.message: Optional[str] = None
@@ -22,14 +21,12 @@ class MessageWaiter:
 
 @dataclass
 class SubscriberConfig:
-
     exchange: str
     connection_url: str
     exchange_type: ExchangeType = ExchangeType.fanout
 
 
 class Subscriber:
-
     def __init__(
         self,
         config: SubscriberConfig,

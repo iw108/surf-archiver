@@ -22,9 +22,7 @@ def fixture_message_waiter(
     connection_url: str,
     random_str: str,
 ) -> Generator[MessageWaiter, None, None]:
-
     def _target(message_waiter: MessageWaiter, consume_event: threading.Event):
-
         config = SubscriberConfig(
             connection_url=connection_url,
             exchange=random_str,

@@ -10,7 +10,6 @@ LOGGER = logging.getLogger(__name__)
 
 
 class Payload(BaseMessage):
-
     job_id: UUID
     date: DateT
     archives: list[ArchiveEntry]
