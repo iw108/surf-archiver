@@ -5,7 +5,6 @@ import pytest
 
 from surf_archiver.archiver import ArchiveEntry, Archiver
 from surf_archiver.file import ArchiveFileSystem, ExperimentFileSystem
-from surf_archiver.utils import Date
 
 
 @pytest.fixture()
@@ -31,7 +30,7 @@ async def test_new_files_are_archived(experiment_file_system: ExperimentFileSyst
         )
     ]
 
-    archives = await archiver.archive(Date(date(2000, 1, 1)))
+    archives = await archiver.archive(date(2000, 1, 1))
 
     assert archives == expected
 
@@ -44,5 +43,5 @@ async def test_already_archived_files_are_skipped(
 
     archiver = Archiver(experiment_file_system, archive_file_system)
 
-    archives = await archiver.archive(Date(date(2000, 1, 1)))
+    archives = await archiver.archive(date(2000, 1, 1))
     assert not archives

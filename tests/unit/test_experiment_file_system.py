@@ -4,7 +4,6 @@ from unittest.mock import AsyncMock
 from s3fs import S3FileSystem
 
 from surf_archiver.file import ExperimentFileSystem
-from surf_archiver.utils import Date
 
 
 async def test_list_files_by_date():
@@ -26,5 +25,5 @@ async def test_list_files_by_date():
         ],
     }
 
-    output = await file_system.list_files_by_date(Date(date(2000, 1, 1)))
+    output = await file_system.list_files_by_date(date(2000, 1, 1))
     assert output == expected

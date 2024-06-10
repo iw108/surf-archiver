@@ -12,7 +12,6 @@ from .config import DEFAULT_CONFIG_PATH, get_config
 from .log import configure_logging
 from .main import run_archiving
 from .publisher import ManagedPublisher, PublisherConfig
-from .utils import Date
 
 LOGGER = logging.getLogger(__name__)
 
@@ -46,7 +45,7 @@ def archive(
     try:
         asyncio.run(
             run_archiving(
-                Date(date),
+                date,
                 job_id,
                 ManagedArchiver(archiver_config),
                 ManagedPublisher(publisher_config),

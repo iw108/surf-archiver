@@ -8,7 +8,7 @@ from typing import AsyncGenerator, Generator
 
 from s3fs import S3FileSystem
 
-from .utils import Date
+from .utils import DateT
 
 
 @asynccontextmanager
@@ -33,8 +33,8 @@ class ExperimentFileSystem:
         self.bucket_name = bucket_name
         self.batch_size = -1
 
-    async def list_files_by_date(self, date_: Date) -> dict[str, list[str]]:
-        date_prefix = date_.date.strftime("%Y%m%d")
+    async def list_files_by_date(self, date: DateT) -> dict[str, list[str]]:
+        date_prefix = date.strftime("%Y%m%d")
 
         files = await self.s3._glob(f"{self.bucket_name}/*/{date_prefix}*.tar")
         return self._group_files(files)

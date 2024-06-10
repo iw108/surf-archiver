@@ -7,7 +7,7 @@ from typing import AsyncGenerator, Generic
 
 from .abc import AbstractConfig, ConfigT
 from .file import ArchiveFileSystem, ExperimentFileSystem, managed_s3_file_system
-from .utils import Date
+from .utils import DateT
 
 LOGGER = logging.getLogger(__name__)
 
@@ -21,7 +21,7 @@ class ArchiveEntry:
 class AbstractArchiver(ABC):
 
     @abstractmethod
-    async def archive(self, date_: Date) -> list[ArchiveEntry]: ...
+    async def archive(self, date: DateT) -> list[ArchiveEntry]: ...
 
 
 class AbstractManagedArchiver(Generic[ConfigT], ABC):
@@ -46,11 +46,11 @@ class Archiver(AbstractArchiver):
         self.experiment_file_system = experiment_file_system
         self.archive_file_system = archive_file_system
 
-    async def archive(self, date_: Date) -> list[ArchiveEntry]:
-        LOGGER.info("Starting archiving for %s", date_.isoformat())
+    async def archive(self, date: DateT) -> list[ArchiveEntry]:
+        LOGGER.info("Starting archiving for %s", date.isoformat())
 
         archives: list[ArchiveEntry] = []
-        async for archive in self._archive_iterator(date_):
+        async for archive in self._archive_iterator(date):
             archives.append(archive)
 
         LOGGER.info("Archiving complete")
@@ -59,14 +59,14 @@ class Archiver(AbstractArchiver):
 
     async def _archive_iterator(
         self,
-        date_: Date,
+        date: DateT,
     ) -> AsyncGenerator[ArchiveEntry, None]:
 
-        grouped_files = await self.experiment_file_system.list_files_by_date(date_)
+        grouped_files = await self.experiment_file_system.list_files_by_date(date)
         experiment_count = len(grouped_files)
         LOGGER.info("Archiving %i experiments", experiment_count)
 
-        tar_name = date_.date.strftime("%Y-%m-%d.tar")
+        tar_name = date.strftime("%Y-%m-%d.tar")
         for index, (experiment_id, files) in enumerate(grouped_files.items(), start=1):
             LOGGER.info("Archiving %s (%i/%i)", experiment_id, index, experiment_count)
 
