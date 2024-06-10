@@ -10,6 +10,6 @@ trap compose_down EXIT
 
 compose_down
 
-docker compose -f ${COMPOSE_FILE} up --detach --wait
+docker compose -f ${COMPOSE_FILE} up --quiet-pull --detach --wait
 
 poetry run pytest tests ${@}
