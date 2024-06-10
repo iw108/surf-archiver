@@ -27,16 +27,24 @@ ruff = "^0.4.8"
 surf-archiver = 'surf_archiver.cli:app'
 
 
-[tool.isort]
-profile = "black"
-
-
 [[tool.mypy.overrides]]
 module = [
     "pika.*",
     "s3fs"
 ]
 ignore_missing_imports = true
+
+
+[tool.ruff.lint]
+select = [
+    "E",  # pycodestyle errors
+    "W",  # pycodestyle warnings
+    "F",  # pyflakes
+    "I",  # isort
+    "B",  # flake8-bugbear
+    "C4",  # flake8-comprehensions
+    "UP",  # pyupgrade
+]
 
 
 [tool.pytest.ini_options]

@@ -53,4 +53,4 @@ def archive(
         )
     except Exception as err:
         LOGGER.exception(err, stack_info=True)
-        raise typer.Exit(code=1)
+        raise typer.Exit(code=1) from err
