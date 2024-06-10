@@ -21,14 +21,8 @@ jobs:
           cache: poetry
       - name: Install dependencies
         run: poetry install 
-      - name: Run black
-        run: poetry run black . --check
-      - name: Run isort
-        run: poetry run isort . --check-only
-      - name: Run flake8
-        run: poetry run flake8 .
-      - name: Run mypy
-        run: poetry run mypy .
+      - name: Run ruff
+        run: poetry run ruff check
 
   tests:
     name: Tests
