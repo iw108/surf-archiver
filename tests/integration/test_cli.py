@@ -10,8 +10,8 @@ from surf_archiver.config import Config
 from surf_archiver.test_utils import MessageWaiter
 
 
-@pytest.fixture()
-def object_store_data(random_str: str):
+@pytest.fixture(name="object_store_data")
+def fixture_object_store_data(random_str: str):
     bucket_url = f"http://localhost:9091/{random_str}"
     file_url = f"{bucket_url}/test-id/20000101_0000.tar"
 
@@ -25,8 +25,8 @@ def object_store_data(random_str: str):
         client.delete(bucket_url)
 
 
-@pytest.fixture()
-def config(connection_url: str, random_str: str, tmp_path: Path) -> Config:
+@pytest.fixture(name="config")
+def fixture_config(connection_url: str, random_str: str, tmp_path: Path) -> Config:
     return Config(
         target_dir=tmp_path,
         connection_url=connection_url,
@@ -36,8 +36,8 @@ def config(connection_url: str, random_str: str, tmp_path: Path) -> Config:
     )
 
 
-@pytest.fixture()
-def config_file(config: Config, tmp_path: Path) -> Path:
+@pytest.fixture("config_file")
+def fixture_config_file(config: Config, tmp_path: Path) -> Path:
     config_dir = tmp_path / "config"
     config_dir.mkdir()
 
@@ -47,8 +47,8 @@ def config_file(config: Config, tmp_path: Path) -> Path:
     return config_file
 
 
-@pytest.fixture()
-def runner() -> CliRunner:
+@pytest.fixture(name="runner")
+def fixture_runner() -> CliRunner:
     env = {
         "AWS_ACCESS_KEY_ID": "aws-access-key-id",
         "AWS_SECRET_ACCESS_KEY": "aws-access-key-id",

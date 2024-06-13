@@ -7,8 +7,8 @@ from surf_archiver.archiver import ArchiveEntry, Archiver
 from surf_archiver.file import ArchiveFileSystem, ExperimentFileSystem
 
 
-@pytest.fixture()
-def experiment_file_system() -> ExperimentFileSystem:
+@pytest.fixture(name="experiment_file_system")
+def fixture_experiment_file_system() -> ExperimentFileSystem:
     file_system = AsyncMock(ExperimentFileSystem)
     file_system.list_files_by_date.return_value = {
         "test-id": ["test-bucket/test-id/20000101_0000.tar"],
