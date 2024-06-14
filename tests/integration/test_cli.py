@@ -36,7 +36,7 @@ def fixture_config(connection_url: str, random_str: str, tmp_path: Path) -> Conf
     )
 
 
-@pytest.fixture("config_file")
+@pytest.fixture(name="config_file")
 def fixture_config_file(config: Config, tmp_path: Path) -> Path:
     config_dir = tmp_path / "config"
     config_dir.mkdir()
