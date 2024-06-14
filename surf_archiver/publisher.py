@@ -1,32 +1,26 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import Optional
+from typing import Generic
 
 from aio_pika import DeliveryMode, ExchangeType, Message, connect
 from aio_pika.abc import AbstractConnection, AbstractExchange
 from pydantic import BaseModel
+
+from .abc import AbstractConfig, ConfigT
 
 
 class BaseMessage(BaseModel):
     pass
 
 
-@dataclass
-class ExchangeConfig:
-    """Exchange config for RabbitMQ"""
-
-    name: str = "surf-data-archive"
-    type: ExchangeType = ExchangeType.FANOUT
-    routing_key: str = "archiving-cron"
-
-
 class AbstractPublisher(ABC):
-
     @abstractmethod
     async def publish(self, message: BaseMessage): ...
 
 
-class AbstractManagedPublisher(ABC):
+class AbstractManagedPublisher(Generic[ConfigT], ABC):
+    def __init__(self, config: ConfigT):
+        self.config = config
 
     @abstractmethod
     async def __aenter__(self) -> AbstractPublisher: ...
@@ -35,16 +29,15 @@ class AbstractManagedPublisher(ABC):
     async def __aexit__(self, *args) -> None: ...
 
 
-class Publisher(AbstractPublisher):
-
+class _Publisher(AbstractPublisher):
     def __init__(
         self,
         exchange: AbstractExchange,
-        exchange_config: ExchangeConfig,
+        routing_key: str,
         delivery_mode: DeliveryMode = DeliveryMode.PERSISTENT,
     ):
         self.exchange = exchange
-        self.exchange_config = exchange_config
+        self.routing_key = routing_key
         self.delivery_mode = delivery_mode
 
     async def publish(self, message: BaseMessage):
@@ -52,38 +45,35 @@ class Publisher(AbstractPublisher):
             message.model_dump_json(indent=4).encode(),
             delivery_mode=self.delivery_mode,
         )
-        await self.exchange.publish(
-            _message,
-            routing_key=self.exchange_config.routing_key,
-        )
+        await self.exchange.publish(_message, self.routing_key)
 
 
-class ManagedPublisher(AbstractManagedPublisher):
+@dataclass
+class PublisherConfig(AbstractConfig):
+    connection_url: str
 
+    exchange_name: str = "surf-data-archive"
+    exchange_type: ExchangeType = ExchangeType.FANOUT
+    routing_key: str = "archiving-cron"
+
+
+class ManagedPublisher(AbstractManagedPublisher[PublisherConfig]):
     conn: AbstractConnection
 
-    def __init__(
-        self,
-        connection_url: str,
-        exchange_config: Optional[ExchangeConfig] = None,
-    ):
-        self.connection_url = connection_url
-        self.exchange_config = exchange_config or ExchangeConfig()
-
-    async def __aenter__(self) -> Publisher:
-        self.conn = await connect(self.connection_url)
+    async def __aenter__(self) -> _Publisher:
+        self.conn = await connect(self.config.connection_url)
         await self.conn.__aenter__()
 
         channel = await self.conn.channel()
 
         exchange = await channel.declare_exchange(
-            self.exchange_config.name,
-            type=self.exchange_config.type,
+            self.config.exchange_name,
+            self.config.exchange_type,
         )
 
-        return Publisher(
+        return _Publisher(
             exchange=exchange,
-            exchange_config=self.exchange_config,
+            routing_key=self.config.routing_key,
         )
 
     async def __aexit__(self, *_):

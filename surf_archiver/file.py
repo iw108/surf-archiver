@@ -1,22 +1,18 @@
+import asyncio
 from collections import defaultdict
 from contextlib import asynccontextmanager, contextmanager
 from pathlib import Path
+from tarfile import TarFile
 from tempfile import TemporaryDirectory
 from typing import AsyncGenerator, Generator
 
 from s3fs import S3FileSystem
 
-from .utils import Date
-
-
-@contextmanager
-def get_temp_dir() -> Generator[Path, None, None]:
-    with TemporaryDirectory() as _temp_path:
-        yield Path(_temp_path)
+from .utils import DateT
 
 
 @asynccontextmanager
-async def managed_file_system() -> AsyncGenerator[S3FileSystem, None]:
+async def managed_s3_file_system() -> AsyncGenerator[S3FileSystem, None]:
     s3 = S3FileSystem(asynchronous=True)
 
     session = await s3.set_session()
@@ -27,7 +23,6 @@ async def managed_file_system() -> AsyncGenerator[S3FileSystem, None]:
 
 
 class ExperimentFileSystem:
-
     def __init__(
         self,
         s3: S3FileSystem,
@@ -37,8 +32,10 @@ class ExperimentFileSystem:
         self.bucket_name = bucket_name
         self.batch_size = -1
 
-    async def list_files_by_date(self, date_: Date) -> dict[str, list[str]]:
-        files = await self.s3._glob(f"{self.bucket_name}/*/{date_}*.tar")
+    async def list_files_by_date(self, date: DateT) -> dict[str, list[str]]:
+        date_prefix = date.strftime("%Y%m%d")
+
+        files = await self.s3._glob(f"{self.bucket_name}/*/{date_prefix}*.tar")
         return self._group_files(files)
 
     async def get_files(self, files: list[str], target_dir: Path):
@@ -50,3 +47,37 @@ class ExperimentFileSystem:
         for file_obj, file in zip(map(Path, files), files):
             data[file_obj.parent.name].append(file)
         return data
+
+
+class _TempDir:
+    def __init__(self, path: Path):
+        self._path = path
+
+    @property
+    def path(self) -> Path:
+        return self._path
+
+
+class ArchiveFileSystem:
+    def __init__(self, base_path: Path):
+        self.base_path = base_path
+        self.pool = None
+
+    def exists(self, path: Path) -> bool:
+        return (self.base_path / path).exists()
+
+    async def add(self, temp_dir: _TempDir, target: Path):
+        loop = asyncio.get_event_loop()
+        await loop.run_in_executor(self.pool, self._add, temp_dir, target)
+
+    def _add(self, temp_dir: _TempDir, target: Path):
+        target = self.base_path / target
+        target.parent.mkdir(parents=True, exist_ok=True)
+        with TarFile.open(target, "w") as tar:
+            tar.add(temp_dir.path, arcname=".")
+
+    @staticmethod
+    @contextmanager
+    def get_temp_dir() -> Generator[_TempDir, None, None]:
+        with TemporaryDirectory() as _temp_path:
+            yield _TempDir(Path(_temp_path))
