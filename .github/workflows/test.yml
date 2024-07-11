@@ -1,10 +1,9 @@
 name: Test
 on:
   pull_request:
-    types:
-      - opened
   push:
-    branches: main
+    branches:
+      - main
 
 jobs:
   static-analysis:
@@ -21,12 +20,27 @@ jobs:
           python-version: "3.9"
           cache: poetry
       - name: Install dependencies
-        run: poetry install 
-      - name: Run black
-        run: poetry run black . --check
-      - name: Run isort
-        run: poetry run isort . --check-only
-      - name: Run flake8
-        run: poetry run flake8 .
-      - name: Run mypy
+        run: poetry install
+      - name: Formatting
+        run: poetry run ruff format --check
+      - name: Linting
+        run: poetry run ruff check
+      - name: Typing
         run: poetry run mypy .
+
+  tests:
+    name: Tests
+    needs: static-analysis
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install poetry
+        run: pipx install poetry
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.9"
+          cache: poetry
+      - name: Install dependencies
+        run: poetry install
+      - name: Run tests
+        run: ./scripts/run-tests.sh
