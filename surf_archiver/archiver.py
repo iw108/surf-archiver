@@ -1,3 +1,4 @@
+import asyncio
 import logging
 from abc import ABC, abstractmethod
 from contextlib import AsyncExitStack
@@ -74,6 +75,10 @@ class Archiver(AbstractArchiver):
             with self.archive_file_system.get_temp_dir() as temp_dir:
                 await self.experiment_file_system.get_files(files, temp_dir.path)
                 await self.archive_file_system.add(temp_dir, path)
+
+                await asyncio.gather(
+                    *[self.experiment_file_system.tag(file) for file in files],
+                )
 
             yield ArchiveEntry(path=str(path), src_keys=files)
 
