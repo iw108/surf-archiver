@@ -20,12 +20,14 @@ async def run_archiving(
     job_id: UUID,
     managed_achviver: AbstractManagedArchiver,
     managed_publisher: AbstractManagedPublisher,
+    *,
+    tag: bool = True,
 ):
     async with AsyncExitStack() as stack:
         archiver = await stack.enter_async_context(managed_achviver)
         publisher = await stack.enter_async_context(managed_publisher)
 
-        archives = await archiver.archive(date)
+        archives = await archiver.archive(date, tag=tag)
 
         payload = Payload(
             job_id=job_id,

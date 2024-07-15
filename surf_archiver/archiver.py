@@ -44,11 +44,11 @@ class Archiver(AbstractArchiver):
         self.experiment_file_system = experiment_file_system
         self.archive_file_system = archive_file_system
 
-    async def archive(self, date: DateT) -> list[ArchiveEntry]:
+    async def archive(self, date: DateT, *, tag: bool = True) -> list[ArchiveEntry]:
         LOGGER.info("Starting archiving for %s", date.isoformat())
 
         archives: list[ArchiveEntry] = []
-        async for archive in self._archive_iterator(date):
+        async for archive in self._archive_iterator(date, tag=tag):
             archives.append(archive)
 
         LOGGER.info("Archiving complete")
@@ -58,6 +58,8 @@ class Archiver(AbstractArchiver):
     async def _archive_iterator(
         self,
         date: DateT,
+        *,
+        tag: bool = True,
     ) -> AsyncGenerator[ArchiveEntry, None]:
         grouped_files = await self.experiment_file_system.list_files_by_date(date)
         experiment_count = len(grouped_files)
@@ -76,9 +78,10 @@ class Archiver(AbstractArchiver):
                 await self.experiment_file_system.get_files(files, temp_dir.path)
                 await self.archive_file_system.add(temp_dir, path)
 
-                await asyncio.gather(
-                    *[self.experiment_file_system.tag(file) for file in files],
-                )
+                if tag:
+                    await asyncio.gather(
+                        *[self.experiment_file_system.tag(file) for file in files],
+                    )
 
             yield ArchiveEntry(path=str(path), src_keys=files)
 
