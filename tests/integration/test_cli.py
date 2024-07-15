@@ -64,7 +64,7 @@ def test_app(
     config: Config,
     message_waiter: MessageWaiter,
 ):
-    cmd = ["archive", "2000-01-01", "--config-path", str(config_file), "--tag", False]
+    cmd = ["archive", "2000-01-01", "--config-path", str(config_file), "--no-tag"]
     result = runner.invoke(app, cmd)
 
     assert result.exit_code == 0
