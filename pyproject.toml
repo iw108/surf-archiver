@@ -30,7 +30,7 @@ surf-archiver = 'surf_archiver.cli:app'
 [[tool.mypy.overrides]]
 module = [
     "pika.*",
-    "s3fs"
+    "s3fs.*",
 ]
 ignore_missing_imports = true
 
