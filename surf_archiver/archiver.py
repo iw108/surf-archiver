@@ -1,38 +1,15 @@
 import asyncio
 import logging
-from abc import ABC, abstractmethod
 from contextlib import AsyncExitStack
 from dataclasses import dataclass
 from pathlib import Path
-from typing import AsyncGenerator, Generic
+from typing import AsyncGenerator
 
-from .abc import AbstractConfig, ConfigT
+from .abc import AbstractArchiver, AbstractConfig, AbstractManagedArchiver, ArchiveEntry
 from .file import ArchiveFileSystem, ExperimentFileSystem, managed_s3_file_system
 from .utils import DateT
 
 LOGGER = logging.getLogger(__name__)
-
-
-@dataclass
-class ArchiveEntry:
-    path: str
-    src_keys: list[str]
-
-
-class AbstractArchiver(ABC):
-    @abstractmethod
-    async def archive(self, date: DateT, *, tag: bool = True) -> list[ArchiveEntry]: ...
-
-
-class AbstractManagedArchiver(Generic[ConfigT], ABC):
-    def __init__(self, config: ConfigT):
-        self.config = config
-
-    @abstractmethod
-    async def __aenter__(self) -> AbstractArchiver: ...
-
-    @abstractmethod
-    async def __aexit__(self, *args) -> None: ...
 
 
 class Archiver(AbstractArchiver):
