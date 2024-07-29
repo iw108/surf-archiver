@@ -20,7 +20,7 @@ class ArchiveEntry:
 
 class AbstractArchiver(ABC):
     @abstractmethod
-    async def archive(self, date: DateT, *, tag: bool = True) -> list[ArchiveEntry]: ...
+    async def archive(self, date: DateT) -> list[ArchiveEntry]: ...
 
 
 class AbstractManagedArchiver(Generic[ConfigT], ABC):
