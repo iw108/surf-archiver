@@ -28,7 +28,6 @@ def archive(
     date: datetime,
     job_id: Annotated[UUID, typer.Argument(default_factory=uuid4)],
     config_path: Path = DEFAULT_CONFIG_PATH,
-    tag: bool = True,
 ):
     config = get_config(config_path)
     if config.log_file:
@@ -50,7 +49,6 @@ def archive(
                 job_id,
                 ManagedArchiver(archiver_config),
                 ManagedPublisher(publisher_config),
-                tag=tag,
             )
         )
     except Exception as err:

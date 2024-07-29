@@ -14,7 +14,7 @@ services:
       - surf-archiver-test
 
   s3:
-    image: adobe/s3mock:3.1.0
+    image: adobe/s3mock:3.10.0
     ports:
       - 9091:9090
     environment:
