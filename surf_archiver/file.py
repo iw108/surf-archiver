@@ -4,9 +4,10 @@ from contextlib import asynccontextmanager, contextmanager
 from pathlib import Path
 from tarfile import TarFile
 from tempfile import TemporaryDirectory
-from typing import AsyncGenerator, Generator
+from typing import AsyncGenerator, Generator, Optional
 
 from s3fs import S3FileSystem
+from s3fs.core import version_id_kw
 
 from .utils import DateT
 
@@ -40,6 +41,20 @@ class ExperimentFileSystem:
 
     async def get_files(self, files: list[str], target_dir: Path):
         await self.s3._get(files, f"{target_dir}/", batch_size=self.batch_size)
+
+    async def tag(self, path: str, *, _tags: Optional[dict[str, str]] = None):
+        tags = _tags or {"archived": "true"}
+        tag = {"TagSet": [{"Key": k, "Value": v} for k, v in tags.items()]}
+
+        bucket, key, version_id = self.s3.split_path(path)
+
+        await self.s3._call_s3(
+            "put_object_tagging",
+            Bucket=bucket,
+            Key=key,
+            Tagging=tag,
+            **version_id_kw(version_id),
+        )
 
     @staticmethod
     def _group_files(files: list[str]) -> dict[str, list[str]]:
