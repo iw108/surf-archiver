@@ -2,13 +2,14 @@ import asyncio
 import logging
 from datetime import datetime
 from pathlib import Path
-from typing import Annotated
+from typing import Annotated, Optional
 from uuid import UUID, uuid4
 
 import typer
 
-from .archiver import ArchiverConfig, ManagedArchiver
+from .archiver import ArchiveParams, ArchiverConfig, ManagedArchiver
 from .config import DEFAULT_CONFIG_PATH, get_config
+from .definitions import Mode
 from .log import configure_logging
 from .main import run_archiving
 from .publisher import ManagedPublisher, PublisherConfig
@@ -26,8 +27,9 @@ def now():
 @app.command()
 def archive(
     date: datetime,
-    job_id: Annotated[UUID, typer.Argument(default_factory=uuid4)],
-    config_path: Path = DEFAULT_CONFIG_PATH,
+    mode: Annotated[Mode, typer.Option()] = Mode.STITCH,
+    job_id: Annotated[Optional[UUID], typer.Option()] = None,
+    config_path: Annotated[Path, typer.Option()] = DEFAULT_CONFIG_PATH,
 ):
     config = get_config(config_path)
     if config.log_file:
@@ -42,11 +44,16 @@ def archive(
         connection_url=config.connection_url,
     )
 
+    archive_params = ArchiveParams(
+        date=date,
+        mode=mode,
+        job_id=job_id or uuid4(),
+    )
+
     try:
         asyncio.run(
             run_archiving(
-                date,
-                job_id,
+                archive_params,
                 ManagedArchiver(archiver_config),
                 ManagedPublisher(publisher_config),
             )

@@ -13,7 +13,7 @@ from surf_archiver.test_utils import MessageWaiter
 @pytest.fixture(name="object_store_data")
 def fixture_object_store_data(random_str: str):
     bucket_url = f"http://localhost:9091/{random_str}"
-    file_url = f"{bucket_url}/test-id/20000101_0000.tar"
+    file_url = f"{bucket_url}/images/test-id/20000101_0000.tar"
 
     with Client() as client:
         client.put(bucket_url)
@@ -64,13 +64,19 @@ def test_app(
     config: Config,
     message_waiter: MessageWaiter,
 ):
-    cmd = ["archive", "2000-01-01", "--config-path", str(config_file)]
+    cmd = [
+        "archive", 
+        "2000-01-01", 
+        "--mode=images", 
+        f"--config-path={config_file}"
+    ]
     result = runner.invoke(app, cmd)
 
     assert result.exit_code == 0
 
     assert config.log_file and config.log_file.exists()
-    assert (config.target_dir / "test-id" / "2000-01-01.tar").exists()
+    assert (config.target_dir / "images" / "test-id" / "2000-01-01.tar").exists()
 
     message_waiter.wait()
     assert message_waiter.message
+    print(message_waiter.message)
