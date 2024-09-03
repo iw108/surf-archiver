@@ -4,10 +4,8 @@ from uuid import UUID
 
 import pytest
 
+from surf_archiver.archiver import ArchiveEntry, ArchiveParams, Archiver
 from surf_archiver.definitions import Mode
-from surf_archiver.archiver import ArchiveParams
-
-from surf_archiver.archiver import ArchiveEntry, Archiver
 from surf_archiver.file import ArchiveFileSystem, ExperimentFileSystem
 
 
@@ -30,8 +28,7 @@ def fixture_archive_params() -> ArchiveParams:
 
 
 async def test_new_files_are_archived(
-    archive_params: ArchiveParams,
-    experiment_file_system: ExperimentFileSystem
+    archive_params: ArchiveParams, experiment_file_system: ExperimentFileSystem
 ):
     archive_file_system = AsyncMock(ArchiveFileSystem)
     archive_file_system.exists.return_value = False

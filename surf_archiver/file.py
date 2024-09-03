@@ -40,7 +40,7 @@ class ExperimentFileSystem:
         mode: Optional[Mode] = None,
     ) -> dict[str, list[str]]:
         date_prefix = date.strftime("%Y%m%d")
-       
+
         files = await self.s3._glob(
             f"{self.bucket_name}/{mode}/*/{date_prefix}*.tar",
         )
