@@ -2,7 +2,7 @@ import asyncio
 import logging
 from datetime import datetime
 from pathlib import Path
-from typing import Annotated, Optional
+from typing import Annotated
 from uuid import UUID, uuid4
 
 import typer
@@ -27,8 +27,8 @@ def now():
 @app.command()
 def archive(
     date: datetime,
+    job_id: Annotated[UUID, typer.Option(default_factory=uuid4)],
     mode: Annotated[Mode, typer.Option()] = Mode.STITCH,
-    job_id: Annotated[Optional[UUID], typer.Option()] = None,
     config_path: Annotated[Path, typer.Option()] = DEFAULT_CONFIG_PATH,
 ):
     config = get_config(config_path)
