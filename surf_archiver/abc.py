@@ -1,7 +1,9 @@
 from abc import ABC, abstractmethod
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Generic, TypeVar
+from uuid import UUID, uuid4
 
+from .definitions import Mode
 from .utils import DateT
 
 ConfigT = TypeVar("ConfigT", bound="AbstractConfig")
@@ -18,9 +20,19 @@ class ArchiveEntry:
     src_keys: list[str]
 
 
+@dataclass
+class ArchiveParams:
+    mode: Mode
+    date: DateT
+    job_id: UUID = field(default_factory=uuid4)
+
+
 class AbstractArchiver(ABC):
     @abstractmethod
-    async def archive(self, date: DateT) -> list[ArchiveEntry]: ...
+    async def archive(
+        self,
+        archive_params: ArchiveParams,
+    ) -> list[ArchiveEntry]: ...
 
 
 class AbstractManagedArchiver(Generic[ConfigT], ABC):

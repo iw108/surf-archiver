@@ -2,7 +2,7 @@ import logging
 from contextlib import AsyncExitStack
 from uuid import UUID
 
-from .archiver import AbstractManagedArchiver, ArchiveEntry
+from .archiver import AbstractManagedArchiver, ArchiveEntry, ArchiveParams
 from .publisher import AbstractManagedPublisher, BaseMessage
 from .utils import DateT
 
@@ -16,8 +16,7 @@ class Payload(BaseMessage):
 
 
 async def run_archiving(
-    date: DateT,
-    job_id: UUID,
+    archive_params: ArchiveParams,
     managed_achviver: AbstractManagedArchiver,
     managed_publisher: AbstractManagedPublisher,
 ):
@@ -25,11 +24,11 @@ async def run_archiving(
         archiver = await stack.enter_async_context(managed_achviver)
         publisher = await stack.enter_async_context(managed_publisher)
 
-        archives = await archiver.archive(date)
+        archives = await archiver.archive(archive_params)
 
         payload = Payload(
-            job_id=job_id,
-            date=date,
+            job_id=archive_params.job_id,
+            date=archive_params.date,
             archives=archives,
         )
         await publisher.publish(payload)

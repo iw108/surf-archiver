@@ -5,11 +5,23 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import AsyncGenerator
 
-from .abc import AbstractArchiver, AbstractConfig, AbstractManagedArchiver, ArchiveEntry
+from .abc import (
+    AbstractArchiver,
+    AbstractConfig,
+    AbstractManagedArchiver,
+    ArchiveEntry,
+    ArchiveParams,
+)
 from .file import ArchiveFileSystem, ExperimentFileSystem, managed_s3_file_system
-from .utils import DateT
 
 LOGGER = logging.getLogger(__name__)
+
+
+@dataclass
+class _TargetArchive:
+    experiment_id: str
+    src_files: list[str]
+    target: Path
 
 
 class Archiver(AbstractArchiver):
@@ -21,43 +33,68 @@ class Archiver(AbstractArchiver):
         self.experiment_file_system = experiment_file_system
         self.archive_file_system = archive_file_system
 
-    async def archive(self, date: DateT) -> list[ArchiveEntry]:
-        LOGGER.info("Starting archiving for %s", date.isoformat())
+    async def archive(
+        self,
+        archive_params: ArchiveParams,
+    ) -> list[ArchiveEntry]:
+        """Archive all files for a given date for given type.
+
+        Files will be bundled per experiment id.
+        """
+        LOGGER.info(
+            "[%s] Archiving %s/%s",
+            archive_params.job_id,
+            archive_params.mode,
+            archive_params.date,
+        )
 
         archives: list[ArchiveEntry] = []
-        async for archive in self._archive_iterator(date):
-            archives.append(archive)
+        async for target_archive in self._get_target_archives(archive_params):
+            LOGGER.info(
+                "[%s] Creating achive for %s",
+                archive_params.job_id,
+                target_archive.experiment_id,
+            )
+            await self._create_archive(target_archive)
 
-        LOGGER.info("Archiving complete")
+            archives.append(
+                ArchiveEntry(
+                    path=str(target_archive.target),
+                    src_keys=target_archive.src_files,
+                )
+            )
+
+        LOGGER.info("[%s] Archiving complete")
 
         return archives
 
-    async def _archive_iterator(
+    async def _get_target_archives(
         self,
-        date: DateT,
-    ) -> AsyncGenerator[ArchiveEntry, None]:
-        grouped_files = await self.experiment_file_system.list_files_by_date(date)
-        experiment_count = len(grouped_files)
-        LOGGER.info("Archiving %i experiments", experiment_count)
+        archive_params: ArchiveParams,
+    ) -> AsyncGenerator[_TargetArchive, None]:
+        grouped_files = await self.experiment_file_system.list_files_by_date(
+            archive_params.date, archive_params.mode
+        )
+        LOGGER.info("[%s] Count %i", archive_params.job_id, len(grouped_files))
 
-        tar_name = date.strftime("%Y-%m-%d.tar")
-        for index, (experiment_id, files) in enumerate(grouped_files.items(), start=1):
-            LOGGER.info("Archiving %s (%i/%i)", experiment_id, index, experiment_count)
-
-            path = Path(experiment_id, tar_name)
-            if self.archive_file_system.exists(path):
-                LOGGER.info("Skipping %s: Already exists", experiment_id)
-                continue
-
-            with self.archive_file_system.get_temp_dir() as temp_dir:
-                await self.experiment_file_system.get_files(files, temp_dir.path)
-                await self.archive_file_system.add(temp_dir, path)
-
-                await asyncio.gather(
-                    *[self.experiment_file_system.tag(file) for file in files],
+        tar_name = archive_params.date.strftime("%Y-%m-%d.tar")
+        for experiment_id, files in grouped_files.items():
+            path = Path(archive_params.mode.value, experiment_id, tar_name)
+            if not self.archive_file_system.exists(path):
+                yield _TargetArchive(
+                    experiment_id=experiment_id, target=path, src_files=files
                 )
 
-            yield ArchiveEntry(path=str(path), src_keys=files)
+    async def _create_archive(self, target_archive: _TargetArchive):
+        with self.archive_file_system.get_temp_dir() as temp_dir:
+            src_files = target_archive.src_files
+
+            await self.experiment_file_system.get_files(src_files, temp_dir.path)
+            await self.archive_file_system.add(temp_dir, target_archive.target)
+
+            await asyncio.gather(
+                *[self.experiment_file_system.tag(file) for file in src_files],
+            )
 
 
 @dataclass
